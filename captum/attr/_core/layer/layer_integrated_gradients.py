@@ -117,7 +117,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         internal_batch_size: Union[None, int],
         return_convergence_delta: Literal[False],
         attribute_to_layer_input: bool,
-    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
+    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+        ...
 
     @overload
     def attribute(
@@ -134,7 +135,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     ) -> Tuple[
         Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
         Tensor,
-    ]: ...
+    ]:
+        ...
 
     @overload
     def attribute(
@@ -154,7 +156,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
             Tensor,
         ],
-    ]: ...
+    ]:
+        ...
 
     @log_usage()
     def attribute(
@@ -168,6 +171,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         internal_batch_size: Union[None, int] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
+        **kwargs
     ) -> Union[
         Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
         Tuple[
@@ -372,6 +376,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             device_ids=self.device_ids,
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
+            **kwargs,
         )
 
         # if we have one output
@@ -391,6 +396,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             device_ids=self.device_ids,
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
+            **kwargs,
         )
         baselines_layer = flatten_tuple(baselines_layer)
 
@@ -400,6 +406,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             inputs: Union[Tensor, Tuple[Tensor, ...]],
             target_ind: TargetType = None,
             additional_forward_args: Any = None,
+            **kwargs,
         ) -> Tuple[Tensor, ...]:
             if self.device_ids is None or len(self.device_ids) == 0:
                 scattered_inputs = (inputs,)
@@ -467,7 +474,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                     # the inputs is an empty tuple
                     # coz it is prepended into additional_forward_args
                     output = _run_forward(
-                        self.forward_func, tuple(), target_ind, additional_forward_args
+                        self.forward_func, tuple(), target_ind, additional_forward_args, **kwargs,
                     )
                 finally:
                     for hook in hooks:
@@ -500,6 +507,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             method=method,
             internal_batch_size=internal_batch_size,
             return_convergence_delta=False,
+            **kwargs,
         )
 
         # handle multiple outputs

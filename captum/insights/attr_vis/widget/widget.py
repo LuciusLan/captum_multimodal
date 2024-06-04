@@ -32,16 +32,16 @@ class CaptumInsights(widgets.DOMWidget):
             print("Captum Insights widget created.")
 
     @observe("config")
-    def _fetch_data(self, change) -> None:
+    def _fetch_data(self, change):
         if not self.config:
             return
         with self.out:
             self.visualizer._update_config(self.config)
             self.output = namedtuple_to_dict(self.visualizer.visualize())
-            self.config = {}
+            self.config = dict()
 
     @observe("label_details")
-    def _fetch_attribution(self, change) -> None:
+    def _fetch_attribution(self, change):
         if not self.label_details:
             return
         with self.out:
@@ -52,4 +52,4 @@ class CaptumInsights(widgets.DOMWidget):
                     self.label_details["labelIndex"],
                 )
             )
-            self.label_details = {}
+            self.label_details = dict()

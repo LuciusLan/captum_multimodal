@@ -559,7 +559,6 @@ class FeatureAblation(PerturbationAttribution):
         current_mask = torch.stack(
             [input_mask == j for j in range(start_feature, end_feature)], dim=0
         ).long()
-        current_mask = current_mask.to(expanded_input.device)
         ablated_tensor = (
             expanded_input * (1 - current_mask).to(expanded_input.dtype)
         ) + (baseline * current_mask.to(expanded_input.dtype))
@@ -585,11 +584,9 @@ class FeatureAblation(PerturbationAttribution):
             return tuple(inp[0].numel() if inp.numel() else 0 for inp in inputs)
 
         return tuple(
-            (
-                (mask.max() - mask.min()).item() + 1
-                if mask is not None
-                else (inp[0].numel() if inp.numel() else 0)
-            )
+            (mask.max() - mask.min()).item() + 1
+            if mask is not None
+            else (inp[0].numel() if inp.numel() else 0)
             for inp, mask in zip(inputs, feature_mask)
         )
 

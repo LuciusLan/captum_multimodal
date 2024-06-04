@@ -232,32 +232,19 @@ class LLMAttribution(Attribution):
         perturbed_tensor,
         inp,
         target_tokens,
-        use_cached_outputs=False,
-        _inspect_forward=None,
+        _inspect_forward,
     ):
         perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
         init_model_inp = perturbed_input
 
         model_inp = init_model_inp
-        model_kwargs = {"attention_mask": torch.tensor([[1] * model_inp.shape[1]])}
 
         log_prob_list = []
-        outputs = None
         for target_token in target_tokens:
-            if use_cached_outputs:
-                if outputs is not None:
-                    model_kwargs = self.model._update_model_kwargs_for_generation(
-                        outputs, model_kwargs
-                    )
-                model_inputs = self.model.prepare_inputs_for_generation(
-                    model_inp, **model_kwargs
-                )
-                outputs = self.model.forward(**model_inputs)
-            else:
-                outputs = self.model.forward(
-                    model_inp, attention_mask=torch.tensor([[1] * model_inp.shape[1]])
-                )
-            new_token_logits = outputs.logits[:, -1]
+            output_logits = self.model.forward(
+                model_inp, attention_mask=torch.tensor([[1] * model_inp.shape[1]])
+            )
+            new_token_logits = output_logits.logits[:, -1]
             log_probs = torch.nn.functional.log_softmax(new_token_logits, dim=1)
 
             log_prob_list.append(log_probs[0][target_token].detach())
@@ -305,7 +292,6 @@ class LLMAttribution(Attribution):
         target: Union[str, torch.Tensor, None] = None,
         num_trials: int = 1,
         gen_args: Optional[Dict] = None,
-        use_cached_outputs: bool = True,
         # internal callback hook can be used for logging
         _inspect_forward: Optional[Callable] = None,
         **kwargs,
@@ -374,12 +360,7 @@ class LLMAttribution(Attribution):
 
             cur_attr = self.attr_method.attribute(
                 attr_input,
-                additional_forward_args=(
-                    inp,
-                    target_tokens,
-                    use_cached_outputs,
-                    _inspect_forward,
-                ),
+                additional_forward_args=(inp, target_tokens, _inspect_forward),
                 **kwargs,
             )
 
@@ -396,9 +377,9 @@ class LLMAttribution(Attribution):
 
         return LLMAttributionResult(
             attr[0],
-            (
-                attr[1:] if self.include_per_token_attr else None
-            ),  # shape(n_output_token, n_input_features)
+            attr[1:]
+            if self.include_per_token_attr
+            else None,  # shape(n_output_token, n_input_features)
             inp.values,
             self.tokenizer.convert_ids_to_tokens(target_tokens),
         )
@@ -459,6 +440,8 @@ class LLMGradientAttribution(Attribution):
         inp: InterpretableInput,
         target_tokens: Tensor,  # 1D tensor of target token ids
         cur_target_idx: int,  # current target index
+        inputs_embeds=None,
+        **kwargs
     ):
         perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
 
@@ -474,7 +457,7 @@ class LLMGradientAttribution(Attribution):
         else:
             new_input_tensor = perturbed_input
 
-        output_logits = self.model(new_input_tensor)
+        output_logits = self.model(input_ids=None, inputs_embeds=inputs_embeds, use_cache=False)
 
         new_token_logits = output_logits.logits[:, -1]
         log_probs = torch.nn.functional.log_softmax(new_token_logits, dim=1)

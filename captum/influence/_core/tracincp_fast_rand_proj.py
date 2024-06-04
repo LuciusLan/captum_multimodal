@@ -96,9 +96,11 @@ class TracInCPFast(TracInCPBase):
 
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            final_fc_layer (torch.nn.Module): The last fully connected layer in
+            final_fc_layer (torch.nn.Module or str): The last fully connected layer in
                     the network for which gradients will be approximated via fast random
-                    projection method.
+                    projection method. Can be either the layer module itself, or the
+                    fully qualified name of the layer if it is a defined attribute of
+                    the passed `model`.
             train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we compute the influence score of
                     training examples on examples in a test batch.
@@ -183,7 +185,10 @@ class TracInCPFast(TracInCPBase):
         self.vectorize = vectorize
 
         # TODO: restore prior state
-        self.final_fc_layer = final_fc_layer  # type: ignore
+        self.final_fc_layer = final_fc_layer
+        if isinstance(self.final_fc_layer, str):
+            self.final_fc_layer = _get_module_from_name(model, self.final_fc_layer)
+        assert isinstance(self.final_fc_layer, Module)
         for param in self.final_fc_layer.parameters():
             param.requires_grad = True
 
@@ -197,24 +202,6 @@ class TracInCPFast(TracInCPBase):
             if test_loss_fn is None
             else _check_loss_fn(self, test_loss_fn, "test_loss_fn")
         )
-
-    @property
-    def final_fc_layer(self) -> Module:
-        return self._final_fc_layer
-
-    @final_fc_layer.setter
-    def final_fc_layer(self, layer: Union[Module, str]):
-        if isinstance(layer, str):
-            try:
-                self._final_fc_layer = _get_module_from_name(self.model, layer)
-                if not isinstance(self._final_fc_layer, Module):
-                    raise Exception("No module found for final_fc_layer")
-            except Exception as ex:
-                raise ValueError(
-                    f'Invalid final_fc_layer str: "{layer}" provided!'
-                ) from ex
-        else:
-            self._final_fc_layer = layer
 
     @log_usage()
     def influence(  # type: ignore[override]
@@ -720,7 +707,7 @@ def _basic_computation_tracincp_fast(
     targets: Tensor,
     loss_fn: Optional[Union[Module, Callable]] = None,
     reduction_type: Optional[str] = None,
-) -> Tuple[Tensor, Tensor]:
+):
     """
     For instances of TracInCPFast and children classes, computation of influence scores
     or self influence scores repeatedly calls this function for different checkpoints
@@ -797,11 +784,9 @@ def _basic_computation_tracincp_fast(
 
     device_ids = cast(
         Union[None, List[int]],
-        (
-            influence_instance.model.device_ids
-            if hasattr(influence_instance.model, "device_ids")
-            else None
-        ),
+        influence_instance.model.device_ids
+        if hasattr(influence_instance.model, "device_ids")
+        else None,
     )
     key_list = _sort_key_list(list(layer_inputs.keys()), device_ids)
 
@@ -867,7 +852,7 @@ class TracInCPFastRandProj(TracInCPFast):
     def __init__(
         self,
         model: Module,
-        final_fc_layer: Module,
+        final_fc_layer: Union[Module, str],
         train_dataset: Union[Dataset, DataLoader],
         checkpoints: Union[str, List[str], Iterator],
         checkpoints_load_func: Callable = _load_flexible_state_dict,
@@ -884,9 +869,11 @@ class TracInCPFastRandProj(TracInCPFast):
 
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            final_fc_layer (torch.nn.Module): The last fully connected layer in
+            final_fc_layer (torch.nn.Module or str): The last fully connected layer in
                     the network for which gradients will be approximated via fast random
-                    projection method.
+                    projection method. Can be either the layer module itself, or the
+                    fully qualified name of the layer if it is a defined attribute of
+                    the passed `model`.
             train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we compute the influence score of
                     training examples on examples in a test batch.
@@ -1363,7 +1350,7 @@ class TracInCPFastRandProj(TracInCPFast):
     def _process_src_intermediate_quantities_tracincp_fast_rand_proj(
         self,
         src_intermediate_quantities: torch.Tensor,
-    ) -> None:
+    ):
         """
         Assumes `self._get_intermediate_quantities_tracin_fast_rand_proj` returns
         vector representations for each example, and that influence between a
@@ -1462,7 +1449,7 @@ class TracInCPFastRandProj(TracInCPFast):
 
         # the "embedding" vector is the concatenation of contributions from each
         # checkpoint, which we compute one by one
-        for j, checkpoint in enumerate(self.checkpoints):
+        for (j, checkpoint) in enumerate(self.checkpoints):
 
             assert (
                 checkpoint is not None

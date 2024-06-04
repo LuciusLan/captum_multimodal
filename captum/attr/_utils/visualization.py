@@ -756,7 +756,6 @@ class VisualizationDataRecord:
     r"""
     A data record for storing attribution relevant information
     """
-
     __slots__ = [
         "word_attributions",
         "pred_prob",

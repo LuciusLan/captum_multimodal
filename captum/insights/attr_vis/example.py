@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 import os
-from typing import List
 
 import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 from captum.insights import AttributionVisualizer, Batch
-from captum.insights.attr_vis.example.get_pretrained_model import Net
 from captum.insights.attr_vis.features import ImageFeature
 
 
-def get_classes() -> List[str]:
+def get_classes():
     classes = [
         "Plane",
         "Car",
@@ -27,7 +25,7 @@ def get_classes() -> List[str]:
     return classes
 
 
-def get_pretrained_model() -> Net:
+def get_pretrained_model():
     class Net(nn.Module):
         def __init__(self) -> None:
             super(Net, self).__init__()
@@ -76,7 +74,7 @@ def formatted_data_iter():
         yield Batch(inputs=images, labels=labels)
 
 
-def main() -> None:
+def main():
     normalize = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     model = get_pretrained_model()
     visualizer = AttributionVisualizer(

@@ -35,7 +35,7 @@ _CONTEXT_IPYTHON = "_CONTEXT_IPYTHON"
 _CONTEXT_NONE = "_CONTEXT_NONE"
 
 
-def _get_context() -> str:
+def _get_context():
     """Determine the most specific context that we're in.
     Implementation from TensorBoard: https://git.io/JvObD.
 
@@ -51,9 +51,6 @@ def _get_context() -> str:
     # returned by `IPython.get_ipython` does not have a `get_trait`
     # method.
     try:
-        # To avoid fbsource//third-party/pypi/google-cloud-pubsub:google-cloud-pubsub
-        # which will cause "Duplicate extension: grpc/_cython/cygrpc.so!"
-        # @manual
         import google.colab  # noqa: F401
         import IPython
     except ImportError:
@@ -220,7 +217,7 @@ class AttributionVisualizer:
             return None
         return result[0]
 
-    def _update_config(self, settings) -> None:
+    def _update_config(self, settings):
         self._config = FilterConfig(
             attribution_method=settings["attribution_method"],
             attribution_arguments=settings["arguments"],
@@ -230,8 +227,8 @@ class AttributionVisualizer:
         )
 
     @log_usage()
-    def render(self, debug: bool = True) -> None:
-        from captum.insights.attr_vis.widget.widget import CaptumInsights
+    def render(self, debug=True):
+        from captum.insights.attr_vis.widget import CaptumInsights
         from IPython.display import display
 
         widget = CaptumInsights(visualizer=self)
@@ -240,13 +237,7 @@ class AttributionVisualizer:
             display(widget.out)
 
     @log_usage()
-    def serve(
-        self,
-        blocking: bool = False,
-        debug: bool = False,
-        port=None,
-        bind_all: bool = False,
-    ):
+    def serve(self, blocking=False, debug=False, port=None, bind_all=False):
         context = _get_context()
         if context == _CONTEXT_COLAB:
             return self._serve_colab(blocking=blocking, debug=debug, port=port)
@@ -255,22 +246,14 @@ class AttributionVisualizer:
                 blocking=blocking, debug=debug, port=port, bind_all=bind_all
             )
 
-    def _serve(
-        self,
-        blocking: bool = False,
-        debug: bool = False,
-        port=None,
-        bind_all: bool = False,
-    ):
+    def _serve(self, blocking=False, debug=False, port=None, bind_all=False):
         from captum.insights.attr_vis.server import start_server
 
         return start_server(
             self, blocking=blocking, debug=debug, _port=port, bind_all=bind_all
         )
 
-    def _serve_colab(
-        self, blocking: bool = False, debug: bool = False, port=None
-    ) -> None:
+    def _serve_colab(self, blocking=False, debug=False, port=None):
         import ipywidgets as widgets
         from captum.insights.attr_vis.server import start_server
         from IPython.display import display, HTML
@@ -441,16 +424,14 @@ class AttributionVisualizer:
                     feature_outputs=features_per_input,
                     actual=actual_label_output,
                     predicted=predicted_scores,
-                    active_index=(
-                        target if target is not None else actual_label_output.index
-                    ),
+                    active_index=target
+                    if target is not None
+                    else actual_label_output.index,
                     # Even if we only iterated over one model, the index should be fixed
                     # to show the index the model would have had in the list
-                    model_index=(
-                        single_model_index
-                        if single_model_index is not None
-                        else model_index
-                    ),
+                    model_index=single_model_index
+                    if single_model_index is not None
+                    else model_index,
                 )
             )
 
@@ -501,7 +482,7 @@ class AttributionVisualizer:
             self._outputs.extend(self._get_outputs())
         return [o[0] for o in self._outputs]
 
-    def get_insights_config(self) -> Dict[str, Any]:
+    def get_insights_config(self):
         return {
             "classes": self.classes,
             "methods": list(ATTRIBUTION_NAMES_TO_METHODS.keys()),

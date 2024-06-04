@@ -367,11 +367,13 @@ class TextTokenInput(InterpretableInput):
     def __init__(
         self,
         text: str,
+        ids: torch.Tensor,
         tokenizer,
         baselines: Union[int, str] = 0,  # usually UNK
         skip_tokens: Union[List[int], List[str], None] = None,
     ):
-        inp_tensor = tokenizer.encode(text, return_tensors="pt")
+        #inp_tensor = tokenizer.encode(text, return_tensors="pt")
+        inp_tensor = ids.cpu()
 
         # input tensor into the model of token ids
         self.inp_tensor = inp_tensor
@@ -398,7 +400,8 @@ class TextTokenInput(InterpretableInput):
         self.skip_tokens = skip_tokens
 
         # features values, the tokens
-        self.values = tokenizer.convert_ids_to_tokens(self.itp_tensor[0].tolist())
+        #self.values = tokenizer.convert_ids_to_tokens(self.itp_tensor[0].tolist())
+        self.values = ids[0].tolist()[1:]
         self.tokenizer = tokenizer
         self.n_itp_features = len(self.values)
 

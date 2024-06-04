@@ -288,7 +288,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 else inputs + layer_eval_len
             )
 
-            ablator = self.attributor(layer_forward_func)
+            ablator = FeatureAblation(layer_forward_func)
 
             layer_attribs = ablator.attribute.__wrapped__(
                 ablator,  # self
@@ -300,7 +300,3 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
             )
             _attr = _format_output(len(layer_attribs) > 1, layer_attribs)
         return _attr
-
-    @property
-    def attributor(self):
-        return FeatureAblation

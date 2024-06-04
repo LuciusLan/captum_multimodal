@@ -50,15 +50,13 @@ def apply_gradient_requirements(
                     """Input Tensor %d has a dtype of %s.
                     Gradients cannot be activated
                     for these data types."""
-                    % (index, str(inputs_dtype)),
-                    stacklevel=2,
+                    % (index, str(inputs_dtype))
                 )
         elif not input.requires_grad:
             if warn:
                 warnings.warn(
                     "Input Tensor %d did not already require gradients, "
-                    "required_grads has been set automatically." % index,
-                    stacklevel=2,
+                    "required_grads has been set automatically." % index
                 )
             input.requires_grad_()
     return grad_required
@@ -136,11 +134,9 @@ def _neuron_gradients(
             )
             gradient_tensors.append(
                 torch.autograd.grad(
-                    (
-                        torch.unbind(current_out_tensor)
-                        if current_out_tensor.numel() > 1
-                        else current_out_tensor
-                    ),
+                    torch.unbind(current_out_tensor)
+                    if current_out_tensor.numel() > 1
+                    else current_out_tensor,
                     inputs,
                 )
             )
@@ -157,7 +153,8 @@ def _forward_layer_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     grad_enabled: bool = False,
-) -> Tuple[Tensor, ...]: ...
+) -> Tuple[Tensor, ...]:
+    ...
 
 
 @typing.overload
@@ -169,7 +166,8 @@ def _forward_layer_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     grad_enabled: bool = False,
-) -> List[Tuple[Tensor, ...]]: ...
+) -> List[Tuple[Tensor, ...]]:
+    ...
 
 
 def _forward_layer_eval(
@@ -180,6 +178,7 @@ def _forward_layer_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     grad_enabled: bool = False,
+    **kwargs,
 ) -> Union[Tuple[Tensor, ...], List[Tuple[Tensor, ...]]]:
     return _forward_layer_eval_with_neuron_grads(
         forward_fn,
@@ -190,6 +189,7 @@ def _forward_layer_eval(
         grad_enabled=grad_enabled,
         device_ids=device_ids,
         attribute_to_layer_input=attribute_to_layer_input,
+        **kwargs,
     )
 
 
@@ -203,7 +203,8 @@ def _forward_layer_distributed_eval(
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: Literal[False] = False,
     require_layer_grads: bool = False,
-) -> Dict[Module, Dict[device, Tuple[Tensor, ...]]]: ...
+) -> Dict[Module, Dict[device, Tuple[Tensor, ...]]]:
+    ...
 
 
 @typing.overload
@@ -217,7 +218,8 @@ def _forward_layer_distributed_eval(
     *,
     forward_hook_with_return: Literal[True],
     require_layer_grads: bool = False,
-) -> Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor]: ...
+) -> Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor]:
+    ...
 
 
 def _forward_layer_distributed_eval(
@@ -229,6 +231,7 @@ def _forward_layer_distributed_eval(
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: bool = False,
     require_layer_grads: bool = False,
+    **kwargs,
 ) -> Union[
     Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor],
     Dict[Module, Dict[device, Tuple[Tensor, ...]]],
@@ -296,6 +299,7 @@ def _forward_layer_distributed_eval(
             inputs,
             target=target_ind,
             additional_forward_args=additional_forward_args,
+            **kwargs,
         )
     finally:
         for hook in all_hooks:
@@ -375,7 +379,8 @@ def _forward_layer_eval_with_neuron_grads(
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+    ...
 
 
 @typing.overload
@@ -388,7 +393,8 @@ def _forward_layer_eval_with_neuron_grads(
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> Tuple[Tensor, ...]: ...
+) -> Tuple[Tensor, ...]:
+    ...
 
 
 @typing.overload
@@ -401,7 +407,8 @@ def _forward_layer_eval_with_neuron_grads(
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> List[Tuple[Tensor, ...]]: ...
+) -> List[Tuple[Tensor, ...]]:
+    ...
 
 
 def _forward_layer_eval_with_neuron_grads(
@@ -415,6 +422,7 @@ def _forward_layer_eval_with_neuron_grads(
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
+    **kwargs,
 ) -> Union[
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]],
     Tuple[Tensor, ...],
@@ -445,6 +453,7 @@ def _forward_layer_eval_with_neuron_grads(
             layer,
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
+            **kwargs,
         )
     device_ids = _extract_device_ids(forward_fn, saved_layer, device_ids)
     # Identifies correct device ordering based on device ids.
@@ -484,8 +493,8 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-    grad_kwargs: Optional[Dict[str, Any]] = None,
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+    ...
 
 
 @typing.overload
@@ -499,8 +508,8 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-    grad_kwargs: Optional[Dict[str, Any]] = None,
-) -> Tuple[List[Tuple[Tensor, ...]], List[Tuple[Tensor, ...]]]: ...
+) -> Tuple[List[Tuple[Tensor, ...]], List[Tuple[Tensor, ...]]]:
+    ...
 
 
 @typing.overload
@@ -514,8 +523,8 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-    grad_kwargs: Optional[Dict[str, Any]] = None,
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+    ...
 
 
 def compute_layer_gradients_and_eval(
@@ -530,7 +539,6 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-    grad_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Union[
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]],
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]],
@@ -575,7 +583,6 @@ def compute_layer_gradients_and_eval(
         args:       Additional input arguments that forward function requires.
                     It takes an empty tuple (no additional arguments) if no
                     additional arguments are required
-        grad_kwargs: Additional keyword arguments for torch.autograd.grad
 
 
     Returns:
@@ -597,6 +604,7 @@ def compute_layer_gradients_and_eval(
             attribute_to_layer_input=attribute_to_layer_input,
             forward_hook_with_return=True,
             require_layer_grads=True,
+            **kwargs,
         )
         assert output[0].numel() == 1, (
             "Target not provided when necessary, cannot"
@@ -615,11 +623,9 @@ def compute_layer_gradients_and_eval(
         if isinstance(layer, Module):
             all_outputs = _reduce_list(
                 [
-                    (
-                        saved_layer[layer][device_id]
-                        if output_fn is None
-                        else output_fn(saved_layer[layer][device_id])
-                    )
+                    saved_layer[layer][device_id]
+                    if output_fn is None
+                    else output_fn(saved_layer[layer][device_id])
                     for device_id in key_list
                 ]
             )
@@ -627,11 +633,9 @@ def compute_layer_gradients_and_eval(
             all_outputs = [
                 _reduce_list(
                     [
-                        (
-                            saved_layer[single_layer][device_id]
-                            if output_fn is None
-                            else output_fn(saved_layer[single_layer][device_id])
-                        )
+                        saved_layer[single_layer][device_id]
+                        if output_fn is None
+                        else output_fn(saved_layer[single_layer][device_id])
                         for device_id in key_list
                     ]
                 )
@@ -644,11 +648,7 @@ def compute_layer_gradients_and_eval(
             for device_id in key_list
             for layer_tensor in saved_layer[single_layer][device_id]
         )
-        saved_grads = torch.autograd.grad(
-            outputs=torch.unbind(output),
-            inputs=grad_inputs,
-            **grad_kwargs or {},
-        )
+        saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)
 
         offset = 0
         all_grads: List[Tuple[Tensor, ...]] = []

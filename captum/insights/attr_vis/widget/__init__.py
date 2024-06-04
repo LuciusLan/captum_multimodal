@@ -1,10 +1,8 @@
-from typing import Dict, List
-
-from captum.insights.attr_vis.widget._version import __version__, version_info
-from captum.insights.attr_vis.widget.widget import CaptumInsights
+from captum.insights.attr_vis.widget._version import __version__, version_info  # noqa
+from captum.insights.attr_vis.widget.widget import *  # noqa
 
 
-def _jupyter_nbextension_paths() -> List[Dict[str, str]]:
+def _jupyter_nbextension_paths():
     return [
         {
             "section": "notebook",
@@ -13,6 +11,3 @@ def _jupyter_nbextension_paths() -> List[Dict[str, str]]:
             "require": "jupyter-captum-insights/extension",
         }
     ]
-
-
-__all__ = ["__version__", "version_info", "CaptumInsights"]

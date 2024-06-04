@@ -4,11 +4,10 @@ import os
 import socket
 import threading
 from time import sleep
-from typing import cast, Dict, Optional
+from typing import Optional
 
 from captum.log import log_usage
 from flask import Flask, jsonify, render_template, request
-from flask.wrappers import Response
 from flask_compress import Compress
 from torch import Tensor
 
@@ -38,13 +37,13 @@ def namedtuple_to_dict(obj):
 
 
 @app.route("/attribute", methods=["POST"])
-def attribute() -> Response:
+def attribute():
     # force=True needed for Colab notebooks, which doesn't use the correct
     # Content-Type header when forwarding requests through the Colab proxy
-    r = cast(Dict, request.get_json(force=True))
+    r = request.get_json(force=True)
     return jsonify(
         namedtuple_to_dict(
-            visualizer._calculate_attribution_from_cache(  # type: ignore
+            visualizer._calculate_attribution_from_cache(
                 r["inputIndex"], r["modelIndex"], r["labelIndex"]
             )
         )
@@ -52,21 +51,21 @@ def attribute() -> Response:
 
 
 @app.route("/fetch", methods=["POST"])
-def fetch() -> Response:
+def fetch():
     # force=True needed, see comment for "/attribute" route above
-    visualizer._update_config(request.get_json(force=True))  # type: ignore
-    visualizer_output = visualizer.visualize()  # type: ignore
+    visualizer._update_config(request.get_json(force=True))
+    visualizer_output = visualizer.visualize()
     clean_output = namedtuple_to_dict(visualizer_output)
     return jsonify(clean_output)
 
 
 @app.route("/init")
-def init() -> Response:
-    return jsonify(visualizer.get_insights_config())  # type: ignore
+def init():
+    return jsonify(visualizer.get_insights_config())
 
 
 @app.route("/")
-def index(id: int = 0) -> str:
+def index(id=0):
     return render_template("index.html")
 
 
@@ -78,7 +77,7 @@ def get_free_tcp_port():
     return port
 
 
-def run_app(debug: bool = True, bind_all: bool = False) -> None:
+def run_app(debug: bool = True, bind_all: bool = False):
     if bind_all:
         app.run(port=port, use_reloader=False, debug=debug, host="0.0.0.0")
     else:

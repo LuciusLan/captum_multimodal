@@ -87,7 +87,8 @@ class IntegratedGradients(GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
         return_convergence_delta: Literal[False] = False,
-    ) -> TensorOrTupleOfTensorsGeneric: ...
+    ) -> TensorOrTupleOfTensorsGeneric:
+        ...
 
     @typing.overload
     def attribute(
@@ -101,7 +102,8 @@ class IntegratedGradients(GradientAttribution):
         internal_batch_size: Union[None, int] = None,
         *,
         return_convergence_delta: Literal[True],
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
+        ...
 
     @log_usage()
     def attribute(  # type: ignore
@@ -114,6 +116,7 @@ class IntegratedGradients(GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
         return_convergence_delta: bool = False,
+        **kwargs,
     ) -> Union[
         TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
     ]:
@@ -288,6 +291,7 @@ class IntegratedGradients(GradientAttribution):
                 additional_forward_args=additional_forward_args,
                 n_steps=n_steps,
                 method=method,
+                **kwargs,
             )
 
         if return_convergence_delta:
@@ -312,6 +316,7 @@ class IntegratedGradients(GradientAttribution):
         n_steps: int = 50,
         method: str = "gausslegendre",
         step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
+        **kwargs,
     ) -> Tuple[Tensor, ...]:
         if step_sizes_and_alphas is None:
             # retrieve step size and scaling factor for specified
@@ -351,13 +356,14 @@ class IntegratedGradients(GradientAttribution):
             inputs=scaled_features_tpl,
             target_ind=expanded_target,
             additional_forward_args=input_additional_args,
+            **kwargs,
         )
 
         # flattening grads so that we can multilpy it with step-size
         # calling contiguous to avoid `memory whole` problems
         scaled_grads = [
             grad.contiguous().view(n_steps, -1)
-            * torch.tensor(step_sizes).float().view(n_steps, 1).to(grad.device)
+            * torch.tensor(step_sizes).view(n_steps, 1).to(grad.device)
             for grad in grads
         ]
 
